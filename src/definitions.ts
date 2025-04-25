@@ -1,20 +1,25 @@
 export interface FilePickerPlugin {
-  pick(options: FilePickerOptions): Promise<FilePickerResults>;
+  pick(options: FilePickerOptions): Promise<FilePickerResult[]>;
+  pickImages(options?: FilePickerCommonOptions): Promise<FilePickerResult[]>;
+  pickVideos(options?: FilePickerCommonOptions): Promise<FilePickerResult[]>;
+  pickFiles(options?: FilePickerCommonOptions): Promise<FilePickerResult[]>;
 }
 
-export interface FilePickerOptions {
+export interface FilePickerCommonOptions {
   /**
    * Select multiple Files
+   * @default false
    */
-  multiple: boolean;
+  multiple?: boolean;
+
   /**
-   * Mimes to select
+   * Maximum number of files to select
    */
-  mimes: string[];
+  limit?: number;
 }
 
-export interface FilePickerResults {
-  files: FilePickerResult[];
+export interface FilePickerOptions extends FilePickerCommonOptions {
+  mimes: string[];
 }
 
 export interface FilePickerResult {
