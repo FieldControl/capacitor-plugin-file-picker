@@ -1,144 +1,155 @@
 package com.whiteguru.capacitor.plugin.filepicker;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.net.Uri;
-import android.provider.OpenableColumns;
+import android.os.Build;
 import androidx.activity.result.ActivityResult;
-import com.getcapacitor.FileUtils;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
-import com.getcapacitor.PluginMethod;
-import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.util.ArrayList;
+import com.getcapacitor.annotation.PluginMethod;
+import java.util.Collections;
 import java.util.List;
-import org.json.JSONException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @CapacitorPlugin(name = "FilePicker")
 public class FilePickerPlugin extends Plugin {
 
-    @PluginMethod
-    public void pick(PluginCall call) {
-        Boolean multiple = call.getBoolean("multiple", false);
-        JSArray mimes = call.getArray("mimes");
+    private ActivityResultLauncher<Intent> pickerLauncher;
+    private PluginCall savedCall;
+    private ExecutorService executor;
 
-        Intent chooseFile;
-
-        List<String> supportedMimeTypes = new ArrayList<>();
-        for (int i = 0; i < mimes.length(); i++) {
-            try {
-                supportedMimeTypes.add(mimes.getString(i));
-            } catch (JSONException e) {}
-        }
-
-        if (supportedMimeTypes.size() == 0) {
-            supportedMimeTypes.add("*/*");
-        }
-
-        if (supportedMimeTypes.size() == 1 && supportedMimeTypes.get(0).startsWith("image/")) {
-            chooseFile = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            chooseFile.setType(supportedMimeTypes.get(0));
-        } else {
-            chooseFile = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-            chooseFile.addCategory(Intent.CATEGORY_OPENABLE);
-
-            if (supportedMimeTypes.size() == 1) {
-                chooseFile.setType(supportedMimeTypes.get(0));
-            } else {
-                chooseFile.setType("*/*");
-                chooseFile.putExtra(Intent.EXTRA_MIME_TYPES, supportedMimeTypes.toArray(new String[0]));
-            }
-        }
-
-        String type = "";
-        for (String mime : supportedMimeTypes) {
-            type += mime + "|";
-        }
-        type = type.substring(0, type.length() - 1);
-
-        chooseFile.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, multiple);
-        chooseFile.setType(type);
-        chooseFile.addCategory(Intent.CATEGORY_OPENABLE);
-        chooseFile = Intent.createChooser(chooseFile, "");
-        startActivityForResult(call, chooseFile, "pickFilesResult");
+    @Override
+    public void load() {
+        super.load();
+        executor = Executors.newSingleThreadExecutor();
+        pickerLauncher =
+            registerActivityResultLauncher(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> processPickResult(savedCall, result)
+            );
     }
 
-    @ActivityCallback
-    private void pickFilesResult(PluginCall call, ActivityResult result) {
-        if (call == null) {
+    @PluginMethod
+    public void pick(PluginCall call) {
+        savedCall = call;
+
+        PickerSettings settings = PickerSettings.from(call);
+        startPicker(settings);
+    }
+
+    @PluginMethod
+    public void pickImages(PluginCall call) {
+        savedCall = call;
+        PickerSettings settings = PickerSettings
+            .from(call)
+            .withMimeTypes(Collections.singletonList("image/*"))
+            .withTitle(call.getString("title", "Select Images"));
+
+        startPicker(settings);
+    }
+
+    @PluginMethod
+    public void pickVideos(PluginCall call) {
+        savedCall = call;
+        PickerSettings settings = PickerSettings
+            .from(call)
+            .withMimeTypes(Collections.singletonList("video/*"))
+            .withTitle(call.getString("title", "Select Videos"));
+
+        startPicker(settings);
+    }
+
+    @PluginMethod
+    public void pickFiles(PluginCall call) {
+        savedCall = call;
+        PickerSettings settings = PickerSettings
+            .from(call)
+            .withMimeTypes(Collections.singletonList("*/*"))
+            .withTitle(call.getString("title", "Select Files"));
+
+        startPicker(settings);
+    }
+
+    private void startPicker(PickerSettings settings) {
+        if (!checkStoragePermission(savedCall)) {
             return;
         }
 
-        Intent data = result.getData();
-        Context context = getBridge().getActivity().getApplicationContext();
-
-        JSArray files = new JSArray();
-        if (result.getResultCode() == Activity.RESULT_OK && data != null) {
-            if (data.getClipData() != null) {
-                for (int i = 0; i < data.getClipData().getItemCount(); i++) {
-                    Uri uri = data.getClipData().getItemAt(i).getUri();
-                    files.put(getCopyFilePath(uri, context));
-                }
-            } else {
-                Uri uri = data.getData();
-                files.put(getCopyFilePath(uri, context));
-            }
-
-            JSObject ret = new JSObject();
-            ret.put("files", files);
-
-            call.resolve(ret);
-        } else if (result.getResultCode() == Activity.RESULT_CANCELED) {
-            call.reject("canceled");
-        }
+        Intent intent = PickerIntentFactory.create(getActivity(), settings.mimeTypes);
+        wrapAndLaunch(intent, settings);
     }
 
-    private JSObject getCopyFilePath(Uri uri, Context context) {
-        Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
-        if (cursor == null) {
-            return null;
+    private void wrapAndLaunch(Intent intent, PickerSettings settings) {
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, settings.multiple);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        pickerLauncher.launch(Intent.createChooser(intent, settings.title));
+    }
+
+    private void processPickResult(PluginCall call, ActivityResult result) {
+        if (call == null) return;
+        if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null) {
+            call.reject("canceled");
+            return;
         }
-        int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-        if (!cursor.moveToFirst()) {
-            return null;
-        }
-        String name = cursor.getString(nameIndex);
-        File file = new File(context.getCacheDir(), name);
-        try {
-            InputStream inputStream = context.getContentResolver().openInputStream(uri);
-            FileOutputStream outputStream = new FileOutputStream(file);
-            int read;
-            int maxBufferSize = 1024 * 1024;
-            int bufferSize = Math.min(inputStream.available(), maxBufferSize);
-            final byte[] buffers = new byte[bufferSize];
-            while ((read = inputStream.read(buffers)) != -1) {
-                outputStream.write(buffers, 0, read);
+
+        executor.execute(
+            () -> {
+                Intent data = result.getData();
+                JSArray files = new JSArray();
+
+                if (data.getClipData() != null) {
+                    for (int i = 0; i < data.getClipData().getItemCount(); i++) {
+                        Uri uri = data.getClipData().getItemAt(i).getUri();
+                        files.put(FileCopyHelper.copy(getContext(), uri));
+                    }
+                } else {
+                    Uri uri = data.getData();
+                    files.put(FileCopyHelper.copy(getContext(), uri));
+                }
+
+                int limit = call.getInt("limit", 0);
+                if (settings.multiple && limit > 0 && files.length() > limit) {
+                    showToast("Selecione no máximo " + limit + " arquivo(s). Você selecionou " + files.length());
+
+                    startPicker(settings);
+                    return;
+                }
+
+                call.resolve(files);
             }
-            inputStream.close();
-            outputStream.close();
-        } catch (Exception e) {
-            return null;
-        } finally {
-            cursor.close();
+        );
+    }
+
+    private boolean checkStoragePermission(PluginCall call) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (!hasPermission("photos")) {
+                requestPermissionForAlias("photos", call, "storagePermissionCallback");
+                return false;
+            }
         }
 
-        Uri fileUri = Uri.fromFile(file);
+        return true;
+    }
 
-        JSObject result = new JSObject();
+    @PluginMethod
+    public void storagePermissionCallback(PluginCall call) {
+        PickerSettings settings = PickerSettings.from(call);
+        startPicker(settings);
+    }
 
-        result.put("path", fileUri);
-        result.put("webPath", FileUtils.getPortablePath(context, bridge.getLocalUrl(), fileUri));
-        result.put("name", name);
-        result.put("extension", name.substring(name.lastIndexOf('.') + 1).toLowerCase());
+    @Override
+    protected void handleOnDestroy() {
+        if (pickerLauncher != null) {
+            pickerLauncher.unregister();
+        }
 
-        return result;
+        executor.shutdownNow();
     }
 }

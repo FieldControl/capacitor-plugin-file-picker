@@ -34,8 +34,11 @@ npx cap sync
 
 <docgen-index>
 
-- [`pick(...)`](#pick)
-- [Interfaces](#interfaces)
+* [`pick(...)`](#pick)
+* [`pickImages(...)`](#pickimages)
+* [`pickVideos(...)`](#pickvideos)
+* [`pickFiles(...)`](#pickfiles)
+* [Interfaces](#interfaces)
 
 </docgen-index>
 
@@ -45,24 +48,65 @@ npx cap sync
 ### pick(...)
 
 ```typescript
-pick(options: FilePickerOptions) => Promise<FilePickerResults>
+pick(options: FilePickerOptions) => Promise<FilePickerResult[]>
 ```
 
 | Param         | Type                                                            |
 | ------------- | --------------------------------------------------------------- |
 | **`options`** | <code><a href="#filepickeroptions">FilePickerOptions</a></code> |
 
-**Returns:** <code>Promise&lt;<a href="#filepickerresults">FilePickerResults</a>&gt;</code>
+**Returns:** <code>Promise&lt;FilePickerResult[]&gt;</code>
 
----
+--------------------
+
+
+### pickImages(...)
+
+```typescript
+pickImages(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResult[]>
+```
+
+| Param         | Type                                                                        |
+| ------------- | --------------------------------------------------------------------------- |
+| **`options`** | <code><a href="#filepickercommonoptions">FilePickerCommonOptions</a></code> |
+
+**Returns:** <code>Promise&lt;FilePickerResult[]&gt;</code>
+
+--------------------
+
+
+### pickVideos(...)
+
+```typescript
+pickVideos(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResult[]>
+```
+
+| Param         | Type                                                                        |
+| ------------- | --------------------------------------------------------------------------- |
+| **`options`** | <code><a href="#filepickercommonoptions">FilePickerCommonOptions</a></code> |
+
+**Returns:** <code>Promise&lt;FilePickerResult[]&gt;</code>
+
+--------------------
+
+
+### pickFiles(...)
+
+```typescript
+pickFiles(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResult[]>
+```
+
+| Param         | Type                                                                        |
+| ------------- | --------------------------------------------------------------------------- |
+| **`options`** | <code><a href="#filepickercommonoptions">FilePickerCommonOptions</a></code> |
+
+**Returns:** <code>Promise&lt;FilePickerResult[]&gt;</code>
+
+--------------------
+
 
 ### Interfaces
 
-#### FilePickerResults
-
-| Prop        | Type                            |
-| ----------- | ------------------------------- |
-| **`files`** | <code>FilePickerResult[]</code> |
 
 #### FilePickerResult
 
@@ -73,11 +117,19 @@ pick(options: FilePickerOptions) => Promise<FilePickerResults>
 | **`name`**      | <code>string</code> | File Name                                                                                                         |
 | **`extension`** | <code>string</code> | File Extensions                                                                                                   |
 
+
 #### FilePickerOptions
 
-| Prop           | Type                  | Description           |
-| -------------- | --------------------- | --------------------- |
-| **`multiple`** | <code>boolean</code>  | Select multiple Files |
-| **`mimes`**    | <code>string[]</code> | Mimes to select       |
+| Prop        | Type                  |
+| ----------- | --------------------- |
+| **`mimes`** | <code>string[]</code> |
+
+
+#### FilePickerCommonOptions
+
+| Prop           | Type                 | Description                       | Default            |
+| -------------- | -------------------- | --------------------------------- | ------------------ |
+| **`multiple`** | <code>boolean</code> | Select multiple Files             | <code>false</code> |
+| **`limit`**    | <code>number</code>  | Maximum number of files to select |                    |
 
 </docgen-api>
