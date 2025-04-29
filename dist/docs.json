@@ -1,0 +1,173 @@
+{
+  "api": {
+    "name": "FilePickerPlugin",
+    "slug": "filepickerplugin",
+    "docs": "",
+    "tags": [],
+    "methods": [
+      {
+        "name": "pick",
+        "signature": "(options: FilePickerOptions) => Promise<FilePickerResult[]>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "FilePickerOptions"
+          }
+        ],
+        "returns": "Promise<FilePickerResult[]>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "FilePickerResult",
+          "FilePickerOptions"
+        ],
+        "slug": "pick"
+      },
+      {
+        "name": "pickImages",
+        "signature": "(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResult[]>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "FilePickerCommonOptions | undefined"
+          }
+        ],
+        "returns": "Promise<FilePickerResult[]>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "FilePickerResult",
+          "FilePickerCommonOptions"
+        ],
+        "slug": "pickimages"
+      },
+      {
+        "name": "pickVideos",
+        "signature": "(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResult[]>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "FilePickerCommonOptions | undefined"
+          }
+        ],
+        "returns": "Promise<FilePickerResult[]>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "FilePickerResult",
+          "FilePickerCommonOptions"
+        ],
+        "slug": "pickvideos"
+      },
+      {
+        "name": "pickFiles",
+        "signature": "(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResult[]>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "FilePickerCommonOptions | undefined"
+          }
+        ],
+        "returns": "Promise<FilePickerResult[]>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "FilePickerResult",
+          "FilePickerCommonOptions"
+        ],
+        "slug": "pickfiles"
+      }
+    ],
+    "properties": []
+  },
+  "interfaces": [
+    {
+      "name": "FilePickerResult",
+      "slug": "filepickerresult",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "path",
+          "tags": [],
+          "docs": "File Path",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "webPath",
+          "tags": [],
+          "docs": "webPath returns a path that can be used to set the src attribute of an image for efficient\nloading and rendering.",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "tags": [],
+          "docs": "File Name",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "extension",
+          "tags": [],
+          "docs": "File Extensions",
+          "complexTypes": [],
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "FilePickerOptions",
+      "slug": "filepickeroptions",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "mimes",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string[]"
+        }
+      ]
+    },
+    {
+      "name": "FilePickerCommonOptions",
+      "slug": "filepickercommonoptions",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "multiple",
+          "tags": [
+            {
+              "text": "false",
+              "name": "default"
+            }
+          ],
+          "docs": "Select multiple Files",
+          "complexTypes": [],
+          "type": "boolean | undefined"
+        },
+        {
+          "name": "limit",
+          "tags": [],
+          "docs": "Maximum number of files to select",
+          "complexTypes": [],
+          "type": "number | undefined"
+        }
+      ]
+    }
+  ],
+  "enums": [],
+  "typeAliases": [],
+  "pluginConfigs": []
+}
