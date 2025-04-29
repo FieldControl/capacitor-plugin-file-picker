@@ -1,70 +1,91 @@
 import Foundation
 import Capacitor
-import CoreServices
+import MobileCoreServices
 
-/**
- * Please read the Capacitor iOS Plugin Development Guide
- * here: https://capacitorjs.com/docs/plugins/ios
- */
-@objc(FilePickerPlugin)
-public class FilePickerPlugin: CAPPlugin {
-    var savedCall: CAPPluginCall? = nil
+struct PickerSettings {
+    let multiple: Bool
+    let limit: Int
+    let extUTIs: [String]
 
-    @objc func pick(_ call: CAPPluginCall) {
-        savedCall = call
-
+    static func from(_ call: CAPPluginCall, mimeOverride: [String]? = nil) -> PickerSettings {
         let multiple = call.getBool("multiple") ?? false
-        let mimes = call.getArray("mimes", String.self) ?? ["*"]
-        var extUTIs: [String] = []
+        let limit = call.getInt("limit") ?? 0
+        let mimes = mimeOverride ?? call.getArray("mimes", String.self) ?? ["*"]
+        var extUTIs = [String]()
 
-        for mimeType in mimes
-        {
-            var extUTI:CFString?
-
-            if (mimeType.starts(with: "audio/*")) {
-                extUTI = kUTTypeAudio
-            } else if (mimeType.starts(with: "image/*")) {
-                extUTI = kUTTypeImage
-            } else if (mimeType.starts(with: "text/*")) {
-                extUTI = kUTTypeText
-            } else if (mimeType.starts(with: "video/*")) {
-                extUTI = "public.movie" as CFString;
-            } else {
-                extUTI = kUTTypeData
-
-                if mimeType.range(of: "*") == nil {
-                    let utiUnmanaged = UTTypeCreatePreferredIdentifierForTag(
-                        kUTTagClassMIMEType,
-                        mimeType as CFString,
-                        nil
-                    )
-
-                    if let uti = (utiUnmanaged?.takeRetainedValue() as String?) {
-                        if !uti.hasPrefix("dyn.") {
-                            extUTI = uti as CFString
-                        }
-                    }
-                }
+        for mime in mimes {
+            var uti: CFString = kUTTypeData
+            if mime.hasPrefix("image/") {
+                uti = kUTTypeImage
+            } else if mime.hasPrefix("video/") {
+                uti = kUTTypeMovie
+            } else if mime.hasPrefix("audio/") {
+                uti = kUTTypeAudio
+            } else if mime.hasPrefix("text/") {
+                uti = kUTTypeText
+            } else if mime.contains("*") {
+                uti = kUTTypeData
+            } else if let converted = UTTypeCreatePreferredIdentifierForTag(
+                kUTTagClassMIMEType,
+                mime as CFString,
+                nil)?.takeRetainedValue() {
+                uti = converted
             }
-
-            extUTIs.append(extUTI! as String)
+            extUTIs.append(uti as String)
         }
 
+        return PickerSettings(multiple: multiple, limit: limit, extUTIs: extUTIs)
+    }
+}
+
+@objc(FilePickerPlugin)
+public class FilePickerPlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "FilePicker"
+    public let jsName = "FilePicker"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "pick", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "pickImages", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "pickVideos", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "pickFiles", returnType: CAPPluginReturnPromise)
+    ]
+
+    private var savedCall: CAPPluginCall?
+    private var settings: PickerSettings?
+
+    @objc func pick(_ call: CAPPluginCall) {
+        openPicker(call: call)
+    }
+
+    @objc func pickImages(_ call: CAPPluginCall) {
+        openPicker(call: call, mimeOverride: ["image/*"] )
+    }
+
+    @objc func pickVideos(_ call: CAPPluginCall) {
+        openPicker(call: call, mimeOverride: ["video/*"] )
+    }
+
+    @objc func pickFiles(_ call: CAPPluginCall) {
+        openPicker(call: call, mimeOverride: ["*/*"] )
+    }
+
+    private func openPicker(call: CAPPluginCall, mimeOverride: [String]? = nil) {
+        self.savedCall = call
+        let s = PickerSettings.from(call, mimeOverride: mimeOverride)
+        self.settings = s
         DispatchQueue.main.async {
-            if (extUTIs.count == 1 && extUTIs.contains("public.movie")){
-                let videoPicker = UIImagePickerController()
-                videoPicker.delegate = self
-                videoPicker.sourceType = .photoLibrary
-                videoPicker.mediaTypes = [kUTTypeMovie as String]
-
-                self.bridge!.viewController!.present(videoPicker, animated: true)
+            if s.extUTIs.count == 1 && s.extUTIs.first == (kUTTypeMovie as String) {
+                let picker = UIImagePickerController()
+                picker.delegate = self
+                picker.mediaTypes = [kUTTypeMovie as String]
+                picker.allowsEditing = false
+                picker.sourceType = .photoLibrary
+                self.bridge?.viewController?.present(picker, animated: true)
             } else {
-                let documentPicker = UIDocumentPickerViewController(documentTypes: extUTIs, in: .import)
-                documentPicker.delegate = self
-                documentPicker.modalPresentationStyle = .formSheet
-                documentPicker.allowsMultipleSelection = multiple
-
-                self.bridge!.viewController!.present(documentPicker, animated: true)
+                let docPicker = UIDocumentPickerViewController(documentTypes: s.extUTIs, in: .import)
+                docPicker.delegate = self
+                docPicker.allowsMultipleSelection = s.multiple
+                docPicker.modalPresentationStyle = .formSheet
+                self.bridge?.viewController?.present(docPicker, animated: true)
             }
         }
     }
@@ -72,80 +93,65 @@ public class FilePickerPlugin: CAPPlugin {
 
 extension FilePickerPlugin: UIDocumentPickerDelegate {
     public func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-        var files = [JSObject]()
+        guard let s = settings else { return }
+        var fileArray = [JSObject]()
 
-        for url in urls
-        {
-            var file = JSObject()
-
-            file["path"] = url.absoluteString
-            file["webPath"] = self.bridge?.portablePath(fromLocalURL: url)?.absoluteString
-            file["name"] = url.lastPathComponent
-            file["extension"] = url.pathExtension
-
-            files.append(file);
+        if s.multiple && s.limit > 0 && urls.count > s.limit {
+            let msg = "Selecione no máximo \(s.limit) arquivo(s). Você selecionou \(urls.count)."
+            DispatchQueue.main.async {
+                let alert = UIAlertController(title: nil, message: msg, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+                    if let call = self.savedCall {
+                        self.openPicker(call: call, mimeOverride: nil)
+                    }
+                })
+                self.bridge?.viewController?.present(alert, animated: true)
+            }
+            return
         }
 
-        savedCall!.resolve([
-            "files": files
-        ])
+        for url in urls {
+            var js = JSObject()
+            js["path"] = url.absoluteString
+            js["webPath"] = bridge?.portablePath(fromLocalURL: url)?.absoluteString
+            js["name"] = url.lastPathComponent
+            js["extension"] = url.pathExtension
+            fileArray.append(js)
+        }
+        savedCall?.resolve(["files": fileArray])
     }
 
     public func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-        savedCall!.reject("canceled")
+        savedCall?.reject("canceled")
     }
 }
 
-extension FilePickerPlugin: UIImagePickerControllerDelegate {
-    public func imagePickerController(_ controller: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        guard
-            let mediaUrl = info[.mediaURL] as? URL
-        else {
-            savedCall!.reject("Cannot get video URL")
-            return
+extension FilePickerPlugin: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        guard let mediaUrl = info[.mediaURL] as? URL, let s = settings else {
+            savedCall?.reject("canceled"); picker.dismiss(animated: true); return
+        }
+        let tmp = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(mediaUrl.lastPathComponent)
+        do {
+            try FileManager.default.copyItem(at: mediaUrl, to: tmp)
+        } catch {
+            savedCall?.reject("Cannot save video"); picker.dismiss(animated: true); return
         }
 
-        var url: URL;
-        do{
-            url = try saveTemporaryVideo(mediaUrl)
-        } catch{
-            savedCall!.reject("Cannot save video")
-            return
-        }
-
-        var files = [JSObject]()
-        var file = JSObject()
-
-        file["path"] = url.absoluteString
-        file["webPath"] = self.bridge?.portablePath(fromLocalURL: url)?.absoluteString
-        file["name"] = url.lastPathComponent
-        file["extension"] = url.pathExtension
-
-        files.append(file);
-
-        controller.dismiss(animated: true) {
-            self.savedCall!.resolve([
-                "files": files
-            ])
+        let js: JSObject = [
+            "path": tmp.absoluteString,
+            "webPath": bridge?.portablePath(fromLocalURL: tmp)?.absoluteString ?? "",
+            "name": tmp.lastPathComponent,
+            "extension": tmp.pathExtension
+        ]
+        picker.dismiss(animated: true) {
+            self.savedCall?.resolve(["files": [js]])
         }
     }
 
-    public func imagePickerControllerDidCancel(_ controller: UIImagePickerController) {
-        controller.dismiss(animated: true) {
-            self.savedCall!.reject("canceled")
+    public func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true) {
+            self.savedCall?.reject("canceled")
         }
     }
-
-    func saveTemporaryVideo(_ mediaUrl: URL) throws -> URL {
-        let url = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent(mediaUrl.lastPathComponent)
-
-        try FileManager.default.copyItem(at: mediaUrl, to: url)
-
-        return url
-    }
-}
-
-extension FilePickerPlugin: UINavigationControllerDelegate {
-
 }
