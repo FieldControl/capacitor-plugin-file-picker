@@ -1,8 +1,8 @@
 export interface FilePickerPlugin {
-    pick(options: FilePickerOptions): Promise<FilePickerResult[]>;
-    pickImages(options?: FilePickerCommonOptions): Promise<FilePickerResult[]>;
-    pickVideos(options?: FilePickerCommonOptions): Promise<FilePickerResult[]>;
-    pickFiles(options?: FilePickerCommonOptions): Promise<FilePickerResult[]>;
+    pick(options: FilePickerOptions): Promise<FilePickerResults>;
+    pickImages(options?: FilePickerCommonOptions): Promise<FilePickerResults>;
+    pickVideos(options?: FilePickerCommonOptions): Promise<FilePickerResults>;
+    pickFiles(options?: FilePickerCommonOptions): Promise<FilePickerResults>;
 }
 export interface FilePickerCommonOptions {
     /**
@@ -17,6 +17,9 @@ export interface FilePickerCommonOptions {
 }
 export interface FilePickerOptions extends FilePickerCommonOptions {
     mimes: string[];
+}
+export interface FilePickerResults {
+    files: FilePickerResult[];
 }
 export interface FilePickerResult {
     /**

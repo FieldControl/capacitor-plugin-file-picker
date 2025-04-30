@@ -48,14 +48,14 @@ npx cap sync
 ### pick(...)
 
 ```typescript
-pick(options: FilePickerOptions) => Promise<FilePickerResult[]>
+pick(options: FilePickerOptions) => Promise<FilePickerResults>
 ```
 
 | Param         | Type                                                            |
 | ------------- | --------------------------------------------------------------- |
 | **`options`** | <code><a href="#filepickeroptions">FilePickerOptions</a></code> |
 
-**Returns:** <code>Promise&lt;FilePickerResult[]&gt;</code>
+**Returns:** <code>Promise&lt;<a href="#filepickerresults">FilePickerResults</a>&gt;</code>
 
 --------------------
 
@@ -63,14 +63,14 @@ pick(options: FilePickerOptions) => Promise<FilePickerResult[]>
 ### pickImages(...)
 
 ```typescript
-pickImages(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResult[]>
+pickImages(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResults>
 ```
 
 | Param         | Type                                                                        |
 | ------------- | --------------------------------------------------------------------------- |
 | **`options`** | <code><a href="#filepickercommonoptions">FilePickerCommonOptions</a></code> |
 
-**Returns:** <code>Promise&lt;FilePickerResult[]&gt;</code>
+**Returns:** <code>Promise&lt;<a href="#filepickerresults">FilePickerResults</a>&gt;</code>
 
 --------------------
 
@@ -78,14 +78,14 @@ pickImages(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerR
 ### pickVideos(...)
 
 ```typescript
-pickVideos(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResult[]>
+pickVideos(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResults>
 ```
 
 | Param         | Type                                                                        |
 | ------------- | --------------------------------------------------------------------------- |
 | **`options`** | <code><a href="#filepickercommonoptions">FilePickerCommonOptions</a></code> |
 
-**Returns:** <code>Promise&lt;FilePickerResult[]&gt;</code>
+**Returns:** <code>Promise&lt;<a href="#filepickerresults">FilePickerResults</a>&gt;</code>
 
 --------------------
 
@@ -93,19 +93,26 @@ pickVideos(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerR
 ### pickFiles(...)
 
 ```typescript
-pickFiles(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResult[]>
+pickFiles(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResults>
 ```
 
 | Param         | Type                                                                        |
 | ------------- | --------------------------------------------------------------------------- |
 | **`options`** | <code><a href="#filepickercommonoptions">FilePickerCommonOptions</a></code> |
 
-**Returns:** <code>Promise&lt;FilePickerResult[]&gt;</code>
+**Returns:** <code>Promise&lt;<a href="#filepickerresults">FilePickerResults</a>&gt;</code>
 
 --------------------
 
 
 ### Interfaces
+
+
+#### FilePickerResults
+
+| Prop        | Type                            |
+| ----------- | ------------------------------- |
+| **`files`** | <code>FilePickerResult[]</code> |
 
 
 #### FilePickerResult

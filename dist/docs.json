@@ -7,7 +7,7 @@
     "methods": [
       {
         "name": "pick",
-        "signature": "(options: FilePickerOptions) => Promise<FilePickerResult[]>",
+        "signature": "(options: FilePickerOptions) => Promise<FilePickerResults>",
         "parameters": [
           {
             "name": "options",
@@ -15,18 +15,18 @@
             "type": "FilePickerOptions"
           }
         ],
-        "returns": "Promise<FilePickerResult[]>",
+        "returns": "Promise<FilePickerResults>",
         "tags": [],
         "docs": "",
         "complexTypes": [
-          "FilePickerResult",
+          "FilePickerResults",
           "FilePickerOptions"
         ],
         "slug": "pick"
       },
       {
         "name": "pickImages",
-        "signature": "(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResult[]>",
+        "signature": "(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResults>",
         "parameters": [
           {
             "name": "options",
@@ -34,18 +34,18 @@
             "type": "FilePickerCommonOptions | undefined"
           }
         ],
-        "returns": "Promise<FilePickerResult[]>",
+        "returns": "Promise<FilePickerResults>",
         "tags": [],
         "docs": "",
         "complexTypes": [
-          "FilePickerResult",
+          "FilePickerResults",
           "FilePickerCommonOptions"
         ],
         "slug": "pickimages"
       },
       {
         "name": "pickVideos",
-        "signature": "(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResult[]>",
+        "signature": "(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResults>",
         "parameters": [
           {
             "name": "options",
@@ -53,18 +53,18 @@
             "type": "FilePickerCommonOptions | undefined"
           }
         ],
-        "returns": "Promise<FilePickerResult[]>",
+        "returns": "Promise<FilePickerResults>",
         "tags": [],
         "docs": "",
         "complexTypes": [
-          "FilePickerResult",
+          "FilePickerResults",
           "FilePickerCommonOptions"
         ],
         "slug": "pickvideos"
       },
       {
         "name": "pickFiles",
-        "signature": "(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResult[]>",
+        "signature": "(options?: FilePickerCommonOptions | undefined) => Promise<FilePickerResults>",
         "parameters": [
           {
             "name": "options",
@@ -72,11 +72,11 @@
             "type": "FilePickerCommonOptions | undefined"
           }
         ],
-        "returns": "Promise<FilePickerResult[]>",
+        "returns": "Promise<FilePickerResults>",
         "tags": [],
         "docs": "",
         "complexTypes": [
-          "FilePickerResult",
+          "FilePickerResults",
           "FilePickerCommonOptions"
         ],
         "slug": "pickfiles"
@@ -85,6 +85,24 @@
     "properties": []
   },
   "interfaces": [
+    {
+      "name": "FilePickerResults",
+      "slug": "filepickerresults",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "files",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [
+            "FilePickerResult"
+          ],
+          "type": "FilePickerResult[]"
+        }
+      ]
+    },
     {
       "name": "FilePickerResult",
       "slug": "filepickerresult",

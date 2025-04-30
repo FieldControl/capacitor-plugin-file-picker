@@ -1,8 +1,8 @@
 import { WebPlugin } from '@capacitor/core';
-import type { FilePickerCommonOptions, FilePickerOptions, FilePickerPlugin, FilePickerResult } from './definitions';
+import type { FilePickerCommonOptions, FilePickerOptions, FilePickerPlugin, FilePickerResults } from './definitions';
 export declare class FilePickerWeb extends WebPlugin implements FilePickerPlugin {
-    pick(options: FilePickerOptions): Promise<FilePickerResult[]>;
-    pickImages(options?: FilePickerCommonOptions): Promise<FilePickerResult[]>;
-    pickVideos(options?: FilePickerCommonOptions): Promise<FilePickerResult[]>;
-    pickFiles(options?: FilePickerCommonOptions): Promise<FilePickerResult[]>;
+    pick(options: FilePickerOptions): Promise<FilePickerResults>;
+    pickImages(options?: FilePickerCommonOptions): Promise<FilePickerResults>;
+    pickVideos(options?: FilePickerCommonOptions): Promise<FilePickerResults>;
+    pickFiles(options?: FilePickerCommonOptions): Promise<FilePickerResults>;
 }
