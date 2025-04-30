@@ -91,6 +91,13 @@ public class FilePickerPlugin extends Plugin {
                 Intent data = result.getData();
                 JSArray files = new JSArray();
 
+                int limit = call.getInt("limit", 0);
+                if (limit > 0 && files.length() > limit) {
+                    for (int i = limit; i < files.length(); i++) {
+                        files.remove(i);
+                    }
+                }
+
                 if (data.getClipData() != null) {
                     for (int i = 0; i < data.getClipData().getItemCount(); i++) {
                         Uri uri = data.getClipData().getItemAt(i).getUri();
@@ -101,16 +108,6 @@ public class FilePickerPlugin extends Plugin {
                     Uri uri = data.getData();
                     String localUrl = getBridge().getLocalUrl();
                     files.put(FileCopyHelper.copy(getContext(), localUrl, uri));
-                }
-
-                int limit = call.getInt("limit", 0);
-                PickerSettings settings = PickerSettings.from(call);
-
-                if (settings.multiple && limit > 0 && files.length() > limit) {
-                    showToast("Selecione no máximo " + limit + " arquivo(s). Você selecionou " + files.length());
-
-                    startPicker(settings);
-                    return;
                 }
 
                 JSObject ret = new JSObject();

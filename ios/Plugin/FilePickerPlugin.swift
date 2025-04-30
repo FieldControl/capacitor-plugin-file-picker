@@ -97,17 +97,10 @@ extension FilePickerPlugin: UIDocumentPickerDelegate {
         var fileArray = [JSObject]()
 
         if s.multiple && s.limit > 0 && urls.count > s.limit {
-            let msg = "Selecione no máximo \(s.limit) arquivo(s). Você selecionou \(urls.count)."
-            DispatchQueue.main.async {
-                let alert = UIAlertController(title: nil, message: msg, preferredStyle: .alert)
-                alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-                    if let call = self.savedCall {
-                        self.openPicker(call: call, mimeOverride: nil)
-                    }
-                })
-                self.bridge?.viewController?.present(alert, animated: true)
+            let excess = urls.count - s.limit
+            for _ in 0..<excess {
+                urls.removeLast()
             }
-            return
         }
 
         for url in urls {
