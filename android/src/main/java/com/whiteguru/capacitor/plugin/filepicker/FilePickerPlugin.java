@@ -13,7 +13,10 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
+
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -43,7 +46,7 @@ public class FilePickerPlugin extends Plugin {
         PickerSettings settings = PickerSettings
             .from(call)
             .withMimeTypes(Collections.singletonList("image/*"))
-            .withTitle(call.getString("title", "Select Images"));
+            .withTitle(call.getString("title", "Selecionar Imagens"));
 
         startPicker(settings);
     }
@@ -54,7 +57,7 @@ public class FilePickerPlugin extends Plugin {
         PickerSettings settings = PickerSettings
             .from(call)
             .withMimeTypes(Collections.singletonList("video/*"))
-            .withTitle(call.getString("title", "Select Videos"));
+            .withTitle(call.getString("title", "Selecionar Vídeos"));
 
         startPicker(settings);
     }
@@ -62,10 +65,24 @@ public class FilePickerPlugin extends Plugin {
     @PluginMethod
     public void pickFiles(PluginCall call) {
         savedCall = call;
+        List<String> allowed = Arrays.asList(
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "application/vnd.google-earth.kml+xml",
+            "text/csv",
+            "application/zip",
+            "application/xml"
+        );
+
         PickerSettings settings = PickerSettings
             .from(call)
-            .withMimeTypes(Collections.singletonList("*/*"))
-            .withTitle(call.getString("title", "Select Files"));
+            .withMimeTypes(allowed)
+            .withTitle(call.getString("title", "Selecionar Arquivos"));
 
         startPicker(settings);
     }
